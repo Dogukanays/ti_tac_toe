@@ -57,6 +57,17 @@ def user_move(char):
 
 def computer_move(char):
     available_spots = [spot for spot in spots if spots[spot] == ""]
+    for spot in available_spots:
+        spots[spot] = char
+        if is_game_ended() == char:
+            return
+        spots[spot] = ""
+    for spot in available_spots:
+        spots[spot] = user
+        if is_game_ended() == user:
+            spots[spot] = char
+            return
+        spots[spot] = ""
     spot_to_fill = random.choice(available_spots)
     spots[spot_to_fill] = char
 
