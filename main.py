@@ -2,6 +2,7 @@ import random
 
 spots = {num: "" for num in range(1, 10)}
 current_score = {"USER": 0, "COMPUTER": 0}
+chars = {"X": None, "O": None}
 
 
 def create_gameboard():
@@ -21,25 +22,18 @@ def create_gameboard():
 
 
 def select_player():
-    player_options = ["X", "O"]
     user_choice = None
-    computer_player = None
     selection_complete = False
     while not selection_complete:
-        user_choice = input("Select your user_player, 'X' or 'O' : ").upper()
-        if user_choice not in player_options:
+        user_choice = input("Select your player, 'X' or 'O' : ").upper()
+        if user_choice not in chars:
             print("This is not a valid choice, please try again")
         else:
+            chars[user_choice] = "USER"
             selection_complete = True
-    for char in player_options:
+    for char in chars:
         if char != user_choice:
-            computer_player = char
-    return user_choice, computer_player
-
-
-players = select_player()
-user = players[0]
-computer = players[1]
+            chars[char] = "COMPUTER"
 
 
 def user_move(char):
@@ -47,11 +41,16 @@ def user_move(char):
     spot_to_fill = None
     selection_complete = False
     while not selection_complete:
-        spot_to_fill = int(input(f"What is your move, (type number among {available_spots}): "))
-        if spot_to_fill not in available_spots:
-            print("This spot has already been filled, please try again.")
+        spot_to_fill = input(f"What is your move, (type number among {available_spots}): ")
+        if spot_to_fill.isdigit():
+            spot_to_fill = int(spot_to_fill)
+        if spot_to_fill not in spots:
+            print("This is not a valid choice, please follow the instructions.\n")
         else:
-            selection_complete = True
+            if spot_to_fill not in available_spots:
+                print("This spot has already been filled, please try again.")
+            else:
+                selection_complete = True
     spots[spot_to_fill] = char
 
 
@@ -95,11 +94,17 @@ def is_game_ended():
         return False
 
 
-def scoreboard(char):
-    print(f"\nThis round has ended, the {char} has won!\n")
-    for player in current_score:
-        if player == char:
-            current_score[player] += 1
+def is_another_round():
+    if input("Do you want another round? Type 'Y' or 'N' ").upper() == "N":
+        declare_result()
+        return False
+    else:
+        return True
+
+
+def scoreboard(player):
+    print(f"\nThis round has ended, the {player} has won!\n")
+    current_score[player] += 1
     return print(f"Current score : {current_score}\n")
 
 
@@ -113,24 +118,36 @@ def declare_result():
         print("It's a tie!")
 
 
+select_player()
 game_ended = False
 while not game_ended:
     if not gameboard_full():
-        create_gameboard()
-        user_move(user)
-        if not gameboard_full():
-            computer_move(computer)
+
         winner = is_game_ended()
         if winner:
             create_gameboard()
             spots = {num: "" for num in range(1, 10)}  # refresh gameboard
-            if winner == user:
-                scoreboard("USER")
-            else:
-                scoreboard("COMPUTER")
-            if input("Do you want another round? Type 'Y' or 'N' ").upper() == "N":
+            scoreboard(chars[winner])
+            if not is_another_round():
                 game_ended = True
-                declare_result()
+                break
+
+        if chars["X"] == "USER":
+            create_gameboard()
+            user_move("X")
+            if not gameboard_full():
+                computer_move("O")
+
+        else:
+            if not gameboard_full():
+                computer_move("X")
+                create_gameboard()
+                user_move("O")
 
     else:
-        spots = {num: "" for num in range(1, 10)}  # refresh gameboard
+
+        print(f"\nThis round has ended with a tie!\nCurrent score: {current_score}\n")
+        if is_another_round():
+            spots = {num: "" for num in range(1, 10)}  # refresh gameboard
+        else:
+            game_ended = True
