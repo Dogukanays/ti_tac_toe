@@ -1,8 +1,10 @@
 import random
 
 spots = {num: "" for num in range(1, 10)}
-current_score = {"USER": 0, "COMPUTER": 0}
-chars = {"X": None, "O": None}
+chars = {
+    "X": [0, "user"],
+    "O": [0, "user"]
+}
 
 
 def create_gameboard():
@@ -21,27 +23,39 @@ def create_gameboard():
     return print(gameboard)
 
 
-def select_player():
-    user_choice = None
+def game_mode_selection():
+    mode = input("Please select your game mode. Type 's' for single-player, 'm' for multiplayer: ").lower()
+    return mode
+
+
+# needed if game mode is single-player
+def player_selection():
+    choice = None
     selection_complete = False
     while not selection_complete:
-        user_choice = input("Select your player, 'X' or 'O' : ").upper()
-        if user_choice not in chars:
+        choice = input("Select your player, 'X' or 'O' : ").upper()
+        if choice not in chars:
             print("This is not a valid choice, please try again")
         else:
-            chars[user_choice] = "USER"
             selection_complete = True
     for char in chars:
-        if char != user_choice:
-            chars[char] = "COMPUTER"
+        if char != choice:
+            chars[char][1] = "computer"
 
 
-def user_move(char):
+def gameboard_full():
+    for spot in spots:
+        if spots[spot] == "":
+            return False
+    return True
+
+
+def move(char):
     available_spots = [spot for spot in spots if spots[spot] == ""]
     spot_to_fill = None
     selection_complete = False
     while not selection_complete:
-        spot_to_fill = input(f"What is your move, (type number among {available_spots}): ")
+        spot_to_fill = input(f"What is your move{available_spots}: ")
         if spot_to_fill.isdigit():
             spot_to_fill = int(spot_to_fill)
         if spot_to_fill not in spots:
@@ -60,14 +74,7 @@ def computer_move(char):
     spots[spot_to_fill] = char
 
 
-def gameboard_full():
-    for spot in spots:
-        if spots[spot] == "":
-            return False
-    return True
-
-
-def is_trio(lst):
+def check_trio(lst):
     if type(lst[0]) == list:
         # if that list represents a row or a column
         for item in lst:
@@ -82,59 +89,71 @@ def is_trio(lst):
             return False
 
 
-def is_game_ended():
+def check_winner():
     columns = [[spots[num], spots[num + 3], spots[num + 6]] for num in [1, 2, 3]]
     rows = [[spots[num], spots[num + 1], spots[num + 2]] for num in [1, 4, 7]]
     diagonal1 = [spots[1], spots[5], spots[9]]
     diagonal2 = [spots[3], spots[5], spots[7]]
-    for item in is_trio(columns), is_trio(rows), is_trio(diagonal1), is_trio(diagonal2):
+    for item in (check_trio(columns), check_trio(rows), check_trio(diagonal1), check_trio(diagonal2)):
         if item:
             return item
     else:
         return False
 
 
-def is_another_round():
-    if input("Do you want another round? Type 'Y' or 'N' ").upper() == "N":
-        declare_result()
+def round_end():
+    if not gameboard_full():
+        winner = check_winner()
+        if winner:
+            chars[winner][0] += 1
+            declare_current_score(winner)
+            return True
+
+        else:
+            return False
+
+    else:
+        print(f"\nThis round has ended with a tie!\nCurrent score ➡️ 'X': {chars['X'][0]} - 'O': {chars['O'][0]}\n")
+        return True
+
+
+def another_round():
+    if input("Do you want another round (yes/no)? ").lower() == "no":
         return False
     else:
         return True
 
 
-def scoreboard(player):
-    print(f"\nThis round has ended, the {player} has won!\n")
-    current_score[player] += 1
-    return print(f"Current score : {current_score}\n")
+def declare_current_score(char):
+    print(f"\nThis round has ended, the player '{char}' has won!\n")
+    print(f"Current score ➡️ 'X': {chars['X'][0]} - 'O': {chars['O'][0]}")
 
 
-def declare_result():
+def declare_final_result():
     print("\nThen the game has ended!")
-    if current_score["USER"] > current_score["COMPUTER"]:
-        print("Congratulations, you have won!")
-    elif current_score["USER"] < current_score["COMPUTER"]:
-        print("You lost!")
+    if chars["X"][0] > chars["O"][0]:
+        print("Player 'X' has won")
+    elif chars["X"][0] < chars["O"][0]:
+        print("Player 'O' has won")
     else:
         print("It's a tie!")
 
 
-select_player()
-game_ended = False
-while not game_ended:
-    if not gameboard_full():
+game_mode = game_mode_selection()
+if game_mode == "s":
+    player_selection()
 
-        winner = is_game_ended()
-        if winner:
+game_is_on = True
+while game_is_on:
+    if game_mode == "m":
+        create_gameboard()
+        move("X")
+        create_gameboard()
+        move("O")
+    else:
+        if chars["X"][1] == "user":
             create_gameboard()
-            spots = {num: "" for num in range(1, 10)}  # refresh gameboard
-            scoreboard(chars[winner])
-            if not is_another_round():
-                game_ended = True
-                break
-
-        if chars["X"] == "USER":
-            create_gameboard()
-            user_move("X")
+            move("X")
             if not gameboard_full():
                 computer_move("O")
 
@@ -142,12 +161,10 @@ while not game_ended:
             if not gameboard_full():
                 computer_move("X")
                 create_gameboard()
-                user_move("O")
+                move("O")
 
-    else:
-
-        print(f"\nThis round has ended with a tie!\nCurrent score: {current_score}\n")
-        if is_another_round():
-            spots = {num: "" for num in range(1, 10)}  # refresh gameboard
-        else:
-            game_ended = True
+    if round_end():
+        spots = {num: "" for num in range(1, 10)}
+        if not another_round():
+            declare_final_result()
+            game_is_on = False
