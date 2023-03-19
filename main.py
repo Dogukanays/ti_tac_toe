@@ -55,7 +55,7 @@ def move(char):
     spot_to_fill = None
     selection_complete = False
     while not selection_complete:
-        spot_to_fill = input(f"What is your move{available_spots}: ")
+        spot_to_fill = input(f"What is your move{available_spots}?: ")
         if spot_to_fill.isdigit():
             spot_to_fill = int(spot_to_fill)
         if spot_to_fill not in spots:
@@ -74,45 +74,31 @@ def computer_move(char):
     spots[spot_to_fill] = char
 
 
-def check_trio(lst):
-    if type(lst[0]) == list:
-        # if that list represents a row or a column
-        for item in lst:
-            if item[0] != "" and item.count(item[0]) == len(item):
-                return item[0]
-        return False
-    else:
-        # for diagonals
-        if lst[0] != "" and lst.count(lst[0]) == len(lst):
-            return lst[0]
-        else:
-            return False
-
-
-def check_winner():
+def triads():
     columns = [[spots[num], spots[num + 3], spots[num + 6]] for num in [1, 2, 3]]
     rows = [[spots[num], spots[num + 1], spots[num + 2]] for num in [1, 4, 7]]
-    diagonal1 = [spots[1], spots[5], spots[9]]
-    diagonal2 = [spots[3], spots[5], spots[7]]
-    for item in (check_trio(columns), check_trio(rows), check_trio(diagonal1), check_trio(diagonal2)):
-        if item:
-            return item
-    else:
-        return False
+    diagonals = [[spots[1], spots[5], spots[9]], [spots[3], spots[5], spots[7]]]
+    return columns + rows + diagonals
+
+
+def is_winner():
+    for triad in triads():
+        if triad.count("X") == 3 or triad.count("O") == 3:
+            return triad[0]
 
 
 def round_end():
     if not gameboard_full():
-        winner = check_winner()
+        winner = is_winner()
         if winner:
             chars[winner][0] += 1
             declare_current_score(winner)
             return True
-
         else:
             return False
 
     else:
+        create_gameboard()
         print(f"\nThis round has ended with a tie!\nCurrent score ➡️ 'X': {chars['X'][0]} - 'O': {chars['O'][0]}\n")
         return True
 
@@ -125,6 +111,7 @@ def another_round():
 
 
 def declare_current_score(char):
+    create_gameboard()
     print(f"\nThis round has ended, the player '{char}' has won!\n")
     print(f"Current score ➡️ 'X': {chars['X'][0]} - 'O': {chars['O'][0]}")
 
@@ -148,6 +135,14 @@ while game_is_on:
     if game_mode == "m":
         create_gameboard()
         move("X")
+        if round_end():
+            spots = {num: "" for num in range(1, 10)}
+            if not another_round():
+                declare_final_result()
+                game_is_on = False
+                continue
+            else:
+                continue
         create_gameboard()
         move("O")
     else:
