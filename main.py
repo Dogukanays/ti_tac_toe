@@ -24,7 +24,14 @@ def create_gameboard():
 
 
 def game_mode_selection():
-    mode = input("Please select your game mode. Type 's' for single-player, 'm' for multiplayer: ").lower()
+    mode = None
+    selection_complete = False
+    while not selection_complete:
+        mode = input("Please select your game mode. Type 's' for single-player, 'm' for multiplayer: ").lower()
+        if mode != "s" and mode != "m":
+            print("This is not a valid choice, please follow the instructions.\n")
+        else:
+            selection_complete = True
     return mode
 
 
@@ -33,7 +40,7 @@ def player_selection():
     choice = None
     selection_complete = False
     while not selection_complete:
-        choice = input("Select your player, 'X' or 'O' : ").upper()
+        choice = input("\nSelect your player, 'X' or 'O' : ").upper()
         if choice not in chars:
             print("This is not a valid choice, please try again")
         else:
@@ -55,7 +62,7 @@ def move(char):
     spot_to_fill = None
     selection_complete = False
     while not selection_complete:
-        spot_to_fill = input(f"What is your move{available_spots}?: ")
+        spot_to_fill = input(f"\nWhat is your move{available_spots}?: ")
         if spot_to_fill.isdigit():
             spot_to_fill = int(spot_to_fill)
         if spot_to_fill not in spots:
@@ -84,23 +91,30 @@ def triads():
 def is_winner():
     for triad in triads():
         if triad.count("X") == 3 or triad.count("O") == 3:
-            return triad[0]
+            winner = triad[0]
+            chars[winner][0] += 1
+            declare_current_score(winner)
+            return True
 
 
 def round_end():
+    global spots
     if not gameboard_full():
-        winner = is_winner()
-        if winner:
-            chars[winner][0] += 1
-            declare_current_score(winner)
+        if is_winner():
+            spots = {num: "" for num in range(1, 10)}
             return True
         else:
             return False
 
     else:
         create_gameboard()
-        print(f"\nThis round has ended with a tie!\nCurrent score ➡️ 'X': {chars['X'][0]} - 'O': {chars['O'][0]}\n")
-        return True
+        if is_winner():
+            spots = {num: "" for num in range(1, 10)}
+            return True
+        else:
+            spots = {num: "" for num in range(1, 10)}
+            print(f"\nThis round has ended with a tie!\nCurrent score ➡️ 'X': {chars['X'][0]} - 'O': {chars['O'][0]}\n")
+            return True
 
 
 def another_round():
@@ -111,9 +125,9 @@ def another_round():
 
 
 def declare_current_score(char):
-    create_gameboard()
     print(f"\nThis round has ended, the player '{char}' has won!\n")
-    print(f"Current score ➡️ 'X': {chars['X'][0]} - 'O': {chars['O'][0]}")
+    create_gameboard()
+    print(f"Current score ➡️ 'X': {chars['X'][0]} - 'O': {chars['O'][0]}\n")
 
 
 def declare_final_result():
@@ -130,36 +144,64 @@ game_mode = game_mode_selection()
 if game_mode == "s":
     player_selection()
 
-game_is_on = True
-while game_is_on:
+while True:
+    # First Path: Multiplayer mode
     if game_mode == "m":
-        create_gameboard()
-        move("X")
-        if round_end():
-            spots = {num: "" for num in range(1, 10)}
-            if not another_round():
-                declare_final_result()
-                game_is_on = False
-                continue
-            else:
-                continue
-        create_gameboard()
-        move("O")
-    else:
-        if chars["X"][1] == "user":
+        if not round_end():
             create_gameboard()
             move("X")
-            if not gameboard_full():
-                computer_move("O")
-
         else:
-            if not gameboard_full():
-                computer_move("X")
-                create_gameboard()
-                move("O")
+            if not another_round():
+                declare_final_result()
+                break
+            else:
+                continue
 
-    if round_end():
-        spots = {num: "" for num in range(1, 10)}
-        if not another_round():
-            declare_final_result()
-            game_is_on = False
+        if not round_end():
+            create_gameboard()
+            move("O")
+        else:
+            if not another_round():
+                declare_final_result()
+                break
+            else:
+                continue
+    else:
+        # Second Path: Single-player mode with player "X"
+        if chars["X"][1] == "user":
+
+            if not round_end():
+                create_gameboard()
+                move("X")
+            else:
+                if not another_round():
+                    declare_final_result()
+                    break
+                else:
+                    continue
+
+            if not round_end():
+                computer_move("O")
+            else:
+                if not another_round():
+                    declare_final_result()
+                    break
+        # Third Path: Single-player mode with player "O"
+        else:
+            if not round_end():
+                computer_move("X")
+                if not gameboard_full():
+                    create_gameboard()
+            else:
+                if not another_round():
+                    declare_final_result()
+                    break
+                else:
+                    continue
+
+            if not round_end():
+                move("O")
+            else:
+                if not another_round():
+                    declare_final_result()
+                    break
