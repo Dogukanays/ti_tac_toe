@@ -24,27 +24,23 @@ def create_gameboard():
 
 
 def game_mode_selection():
-    mode = None
-    selection_complete = False
-    while not selection_complete:
+    while True:
         mode = input("Please select your game mode. Type 's' for single-player, 'm' for multiplayer: ").lower()
         if mode != "s" and mode != "m":
             print("This is not a valid choice, please follow the instructions.\n")
         else:
-            selection_complete = True
+            break
     return mode
 
 
 # needed if game mode is single-player
 def player_selection():
-    choice = None
-    selection_complete = False
-    while not selection_complete:
-        choice = input("\nSelect your player, 'X' or 'O' : ").upper()
+    while True:
+        choice = input("\nSelect your player(X/O): ").upper()
         if choice not in chars:
-            print("This is not a valid choice, please try again")
+            print("This is not a valid choice, please follow the instructions.")
         else:
-            selection_complete = True
+            break
     for char in chars:
         if char != choice:
             chars[char][1] = "computer"
@@ -59,9 +55,7 @@ def gameboard_full():
 
 def move(char):
     available_spots = [spot for spot in spots if spots[spot] == ""]
-    spot_to_fill = None
-    selection_complete = False
-    while not selection_complete:
+    while True:
         spot_to_fill = input(f"\nWhat is your move{available_spots}?: ")
         if spot_to_fill.isdigit():
             spot_to_fill = int(spot_to_fill)
@@ -71,7 +65,7 @@ def move(char):
             if spot_to_fill not in available_spots:
                 print("This spot has already been filled, please try again.")
             else:
-                selection_complete = True
+                break
     spots[spot_to_fill] = char
 
 
@@ -118,10 +112,14 @@ def round_end():
 
 
 def another_round():
-    if input("Do you want another round (yes/no)? ").lower() == "no":
-        return False
-    else:
-        return True
+    while True:
+        response = input("Do you want another round (yes/no)? ").lower()
+        if response == "no":
+            return False
+        elif response == "yes":
+            return True
+        else:
+            print("This is not a valid choice, please follow the instructions.\n")
 
 
 def declare_current_score(char):
