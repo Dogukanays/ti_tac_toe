@@ -69,26 +69,68 @@ def move(char):
     spots[spot_to_fill] = char
 
 
+def spot_for_win(char):
+    all_triads = triads()
+    for triad_kind in all_triads:
+        for single_triad in all_triads[triad_kind]:
+            char_found = 0
+            for spot in single_triad:
+                if single_triad[spot] == char:
+                    char_found += 1
+            if char_found == 2:
+                for spot in single_triad:
+                    if single_triad[spot] == "":
+                        return spot
+
+
+def spot_for_not_lose(char):
+    all_triads = triads()
+    for triad_kind in all_triads:
+        for single_triad in all_triads[triad_kind]:
+            char_found = 0
+            for spot in single_triad:
+                if single_triad[spot] != char and single_triad[spot] != "":
+                    char_found += 1
+            if char_found == 2:
+                for spot in single_triad:
+                    if single_triad[spot] == "":
+                        return spot
+
+
 def computer_move(char):
-    available_spots = [spot for spot in spots if spots[spot] == ""]
-    spot_to_fill = random.choice(available_spots)
-    spots[spot_to_fill] = char
+    if spot_for_win(char):
+        spots[spot_for_win(char)] = char
+
+    elif spot_for_not_lose(char):
+        spots[spot_for_not_lose(char)] = char
+
+    else:
+        available_spots = [spot for spot in spots if spots[spot] == ""]
+        spot_to_fill = random.choice(available_spots)
+        spots[spot_to_fill] = char
 
 
 def triads():
-    columns = [[spots[num], spots[num + 3], spots[num + 6]] for num in [1, 2, 3]]
-    rows = [[spots[num], spots[num + 1], spots[num + 2]] for num in [1, 4, 7]]
-    diagonals = [[spots[1], spots[5], spots[9]], [spots[3], spots[5], spots[7]]]
-    return columns + rows + diagonals
+
+    columns = [{num: spots[num], num + 3: spots[num + 3], num + 6: spots[num + 6]} for num in [1, 2, 3]]
+    rows = [{num: spots[num], num + 1: spots[num + 1], num + 2: spots[num + 2]} for num in [1, 4, 7]]
+    diagonals = [{1: spots[1], 5: spots[5], 9: spots[9]}, {3: spots[3], 5: spots[5], 7: spots[7]}]
+    return {"columns": columns, "rows": rows, "diagonals": diagonals}
 
 
 def is_winner():
-    for triad in triads():
-        if triad.count("X") == 3 or triad.count("O") == 3:
-            winner = triad[0]
-            chars[winner][0] += 1
-            declare_current_score(winner)
-            return True
+    all_triads = triads()
+    for triad_kind in all_triads:
+        for single_triad in all_triads[triad_kind]:
+            char_found = []
+            for spot in single_triad:
+                if single_triad[spot] != "":
+                    char_found.append(single_triad[spot])
+            if char_found.count("X") == 3 or char_found.count("O") == 3:
+                winner = single_triad[spot]
+                chars[winner][0] += 1
+                declare_current_score(winner)
+                return True
 
 
 def round_end():
