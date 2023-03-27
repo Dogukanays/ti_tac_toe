@@ -46,6 +46,16 @@ def player_selection():
             chars[char][1] = "computer"
 
 
+def difficulty_selection():
+    while True:
+        choice = input("\nSelect your difficulty level(easy/normal/hard/impossible): ").lower()
+        if choice not in ["easy", "normal", "hard", "impossible"]:
+            print("This is not a valid choice, please follow the instructions.")
+        else:
+            break
+    return choice
+
+
 def gameboard_full():
     for spot in spots:
         if spots[spot] == "":
@@ -69,7 +79,7 @@ def move(char):
     spots[spot_to_fill] = char
 
 
-def spot_for_win(char):
+def computer_offensive_strategy(char):
     all_triads = triads()
     for triad_kind in all_triads:
         for single_triad in all_triads[triad_kind]:
@@ -83,7 +93,7 @@ def spot_for_win(char):
                         return spot
 
 
-def spot_for_not_lose(char):
+def computer_defensive_strategy(char):
     all_triads = triads()
     for triad_kind in all_triads:
         for single_triad in all_triads[triad_kind]:
@@ -98,16 +108,52 @@ def spot_for_not_lose(char):
 
 
 def computer_move(char):
-    if spot_for_win(char):
-        spots[spot_for_win(char)] = char
+    num_for_possibilities = [1, 2, 3, 4]
+    num = random.choice(num_for_possibilities)
 
-    elif spot_for_not_lose(char):
-        spots[spot_for_not_lose(char)] = char
+    if difficulty_level == "easy":
+        if num == 1 and computer_defensive_strategy(char):
+            spots[computer_defensive_strategy(char)] = char
+        else:
+            available_spots = [spot for spot in spots if spots[spot] == ""]
+            spot_to_fill = random.choice(available_spots)
+            spots[spot_to_fill] = char
 
+    elif difficulty_level == "normal":
+        if num in [1, 2] and computer_offensive_strategy(char):
+            spots[computer_offensive_strategy(char)] = char
+
+        elif num in [1, 2] and computer_defensive_strategy(char):
+            spots[computer_defensive_strategy(char)] = char
+
+        else:
+            available_spots = [spot for spot in spots if spots[spot] == ""]
+            spot_to_fill = random.choice(available_spots)
+            spots[spot_to_fill] = char
+
+    elif difficulty_level == "hard":
+        if num in [1, 2, 3] and computer_offensive_strategy(char):
+            spots[computer_offensive_strategy(char)] = char
+
+        elif num in [1, 2, 3] and computer_defensive_strategy(char):
+            spots[computer_defensive_strategy(char)] = char
+
+        else:
+            available_spots = [spot for spot in spots if spots[spot] == ""]
+            spot_to_fill = random.choice(available_spots)
+            spots[spot_to_fill] = char
     else:
-        available_spots = [spot for spot in spots if spots[spot] == ""]
-        spot_to_fill = random.choice(available_spots)
-        spots[spot_to_fill] = char
+
+        if computer_offensive_strategy(char):
+            spots[computer_offensive_strategy(char)] = char
+
+        elif computer_defensive_strategy(char):
+            spots[computer_defensive_strategy(char)] = char
+
+        else:
+            available_spots = [spot for spot in spots if spots[spot] == ""]
+            spot_to_fill = random.choice(available_spots)
+            spots[spot_to_fill] = char
 
 
 def triads():
@@ -180,6 +226,7 @@ def declare_final_result():
         print("It's a tie!")
 
 
+difficulty_level = difficulty_selection()
 game_mode = game_mode_selection()
 if game_mode == "s":
     player_selection()
